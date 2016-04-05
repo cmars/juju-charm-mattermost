@@ -1,3 +1,6 @@
 includes:
-    - 'layer:basic'
-    - 'interface:pgsql'
+ - 'layer:basic'
+ - 'interface:pgsql'
+basic:
+    packages:
+     - '--no-install-recommends'

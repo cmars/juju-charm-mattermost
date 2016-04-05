@@ -1,6 +1,8 @@
 name: mattermost
 summary: Mattermost is an open source, self-hosted Slack-alternative
 description: |
+    From the [Mattermost](http://www.mattermost.org) website:
+    
     As an alternative to proprietary SaaS messaging, Mattermost brings all your
     team communication into one place, making it searchable and accessible
     anywhere.
@@ -8,13 +10,12 @@ description: |
     Mattermost is:
     
     * Slack-compatible, not Slack-limited – Mattermost features rival Slack features, and support a superset of Slack’s incoming and outgoing webhook integrations, including compatibility with existing Slack integrations. From your existing Slack teams, you can import users, public channel history and even theme setting colors into Mattermost. Mattermost mobile experience with comment threads and file sharing
-    * Accessible on web, desktop, phone and tablet – Use Mattermost from your iOS or Android phones and tablets or with installed apps on Windows, Linux and Mac. Easy to deploy, manage, upgrade and extend– Mattermost is written in Golang and React and runs as a single Linux binary with either MySQL or Postgres. Every month on the 16th a new compiled version is released under an MIT license. Try Mattermost with a one-line Docker install, and many install guides are available (including native installs to RHEL, Ubuntu, Debian, as well as via Puppet, Docker, Cloud Foundry, and Heroku).
+    * Accessible on web, desktop, phone and tablet – Use Mattermost from your iOS or Android phones and tablets or with installed apps on Windows, Linux and Mac. Easy to deploy, manage, upgrade and extend– Mattermost is written in Golang and React and runs as a single Linux binary with either MySQL or Postgres. Every month on the 16th a new compiled version is released under an MIT license.
     * Supported by a vibrant community – Use Mattermost with dozens of community integrations and applications, including Jira, IRC, XMPP, Hubot, Giphy, Jenkins, GitLab, Trac, Redmine, SVN, RSS/Atom and many others. Build and share your own apps using Mattermost APIs and drivers.
 tags:
     - applications
     - messaging
     - groupware
-    - everything-old-is-new
 maintainer: "Casey Marshall <charmed@cmars.tech>"
 requires:
     db:

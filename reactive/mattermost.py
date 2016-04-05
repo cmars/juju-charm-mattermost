@@ -15,16 +15,18 @@ INSTALL_URL="https://github.com/mattermost/platform/releases/download/v2.1.0/mat
 @hook('install')
 def install():
     handler = archiveurl.ArchiveUrlFetchHandler()
-    handler.download(INSTALL_URL % (version), dest='/opt')
+    handler.download(INSTALL_URL, dest='/opt/mattermost.tar.gz')
 
-    extract_tarfile('/srv/mattermost.tar.gz', destpath="/opt")
+    extract_tarfile('/opt/mattermost.tar.gz', destpath="/opt")
  
     # Create mattermost user & group
     add_group("mattermost")
     adduser("mattermost", system_user=True)
     
-    os.makedirs("/opt/mattermost/data", 0700)
+    os.makedirs("/opt/mattermost/data", mode=0o700, exist_ok=True)
     shutil.chown("/opt/mattermost/data", user="mattermost", group="mattermost")
+    os.makedirs("/opt/mattermost/logs", mode=0o700, exist_ok=True)
+    shutil.chown("/opt/mattermost/logs", user="mattermost", group="mattermost")
 
     render(source='upstart',
         target="/etc/init/mattermost.conf",
@@ -47,7 +49,7 @@ def setup(db):
 
 
 def restart_service():
-    if service_running("mattermost")
+    if service_running("mattermost"):
         service_restart("mattermost")
     else:
         service_start("mattermost")

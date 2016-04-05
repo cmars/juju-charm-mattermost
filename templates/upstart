@@ -7,5 +7,7 @@ respawn
 setuid mattermost
 setgid mattermost
 
+chdir /opt/mattermost
+
 exec /opt/mattermost/bin/platform
 
