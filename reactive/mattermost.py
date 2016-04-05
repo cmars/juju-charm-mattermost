@@ -33,6 +33,8 @@ def install():
         perms=0o644,
         context={})
 
+    hookenv.open_port(8065)
+
 
 @when("db.database.available")
 def setup(db):
