@@ -1,6 +1,9 @@
 includes:
  - 'layer:basic'
  - 'interface:pgsql'
-basic:
-    packages:
-     - '--no-install-recommends'
+ - 'interface:http'
+repo: https://github.com/cmars/juju-charm-mattermost.git
+options:
+    basic:
+        packages:
+         - '--no-install-recommends'

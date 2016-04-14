@@ -10,16 +10,26 @@ In this directory:
 
 To deploy the locally-built charm:
 
-    $ juju deploy local:trusty/mattermost
+    $ juju deploy cs:~cmars/mattermost
     $ juju deploy postgresql
     $ juju add-relation postgresql:db mattermost:db
 
-## TODO
+## License
 
-- Randomly generate encryption keys and salts during install hook.
-- `website` relation to support reverse-proxying.
+This charm is Copyright 2016 Cmars Technologies, LLC. All rights reserved.
+
+Mattermost is a trademark of Mattermost, Inc.
+
+This charm automates installation, configuration and management of a Mattermost
+server based on publicly documented best practices. This charm is not a part of
+the Mattermost product, and does not represent Mattermost, or its trademark
+owner, Mattermost, Inc., in any way.
+
+See the [Mattermost](http://www.mattermost.org/) website for more information
+about the licenses and trademarks applicable to the software installed by this
+charm.
 
 ## Contact
 
-Casey Marshall <charmed at cmars.tech>
-
+Email: <charmed at cmars.tech>.
+IRC: cmars on FreeNode.

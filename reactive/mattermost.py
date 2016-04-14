@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 
@@ -7,47 +8,89 @@ from charmhelpers.core.host import add_group, adduser, service_running, service_
 from charmhelpers.core.templating import render
 from charmhelpers.fetch import archiveurl, apt_install, apt_update
 from charmhelpers.payload.archive import extract_tarfile
+from charmhelpers.core.unitdata import kv
 
 
-INSTALL_URL="https://github.com/mattermost/platform/releases/download/v2.1.0/mattermost.tar.gz"
+INSTALL_URL="https://github.com/mattermost/platform/releases/download/v%s/mattermost.tar.gz"
 
 
 @hook('install')
 def install():
+    conf = hookenv.config()
+    version = conf.get('version', '2.1.0') 
+
     handler = archiveurl.ArchiveUrlFetchHandler()
-    handler.download(INSTALL_URL, dest='/opt/mattermost.tar.gz')
+    handler.download(INSTALL_URL % version, dest='/opt/mattermost.tar.gz')
 
     extract_tarfile('/opt/mattermost.tar.gz', destpath="/opt")
- 
+
     # Create mattermost user & group
     add_group("mattermost")
     adduser("mattermost", system_user=True)
-    
-    os.makedirs("/opt/mattermost/data", mode=0o700, exist_ok=True)
-    shutil.chown("/opt/mattermost/data", user="mattermost", group="mattermost")
-    os.makedirs("/opt/mattermost/logs", mode=0o700, exist_ok=True)
-    shutil.chown("/opt/mattermost/logs", user="mattermost", group="mattermost")
+
+    for dir in ("data", "logs", "config"):
+        os.makedirs(os.path.join("/opt/mattermost", dir), mode=0o700, exist_ok=True)
+        shutil.chown(os.path.join("/opt/mattermost", dir), user="mattermost", group="mattermost")
 
     render(source='upstart',
         target="/etc/init/mattermost.conf",
         perms=0o644,
         context={})
+    hookenv.status_set('maintenance', 'installation complete')
 
-    hookenv.open_port(8065)
+
+@hook('config-changed')
+def config_changed():
+    conf = hookenv.config()
+    if conf.changed('port') and conf.previous('port'):
+        hookenv.close_port(conf.previous('port'))
+    if conf.get('port'):
+        hookenv.open_port(conf['port'])
+    setup()
 
 
 @when("db.database.available")
-def setup(db):
-    conf = hookenv.config()
-    render(source='config.json',
-        target="/opt/mattermost/config/config.json",
-        perms=0o644,
-        context={
-            'conf': conf,
-            'db': db,
-        })
+def db_available(db):
+    unit_data = kv()
+    unit_data.set('db', {
+        'host': db.host(),
+        'port': db.port(),
+        'user': db.user(),
+        'password': db.password(),
+        'database': db.database(),
+    })
+    setup()
     remove_state("db.database.available")
+
+
+def setup():
+    unit_data = kv()
+    db = unit_data.get('db')
+    if not db:
+        hookenv.status_set('blocked', 'need relation to postgresql')
+        return
+
+    conf = hookenv.config()
+    with open("/opt/mattermost/config/config.json", "r") as f:
+        config = json.load(f)
+
+    # Config options
+    sysconf = config.setdefault("System", {})
+    sysconf['ListenAddress'] = ':%d' % (conf['port'])
+    teamconf = config.setdefault("TeamSettings", {})
+    teamconf['SiteName'] = conf['site_name']
+    
+    # Database
+    sqlconf = config.setdefault("SqlSettings", {})
+    sqlconf['DriverName'] = 'postgres'
+    sqlconf['DataSource'] = 'postgres://%(user)s:%(password)s@%(host)s:%(port)s/%(database)s?sslmode=disable&connect_timeout=10' % db
+
+    with open("/opt/mattermost/config/config.json", "w") as f:
+        json.dump(config, f)
+    remove_state("db.database.available")
+
     restart_service()
+    hookenv.status_set('active', 'ready')
 
 
 def restart_service():
@@ -55,3 +98,9 @@ def restart_service():
         service_restart("mattermost")
     else:
         service_start("mattermost")
+
+
+@when('website.available')
+def setup_website(website):
+    conf = hookenv.config()
+    website.configure(conf['port'])

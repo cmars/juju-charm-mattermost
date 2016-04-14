@@ -1,0 +1,13 @@
+options:
+  site_name:                       
+    type: string               
+    description: Name of service shown in login screens and UI.
+    default: "Mattermost"
+  version:
+    type: string
+    description: Version of Mattermost to install.
+    default: "2.1.0"
+  port:
+    type: int
+    description: Listen port
+    default: 8065

@@ -1,5 +1,5 @@
 name: mattermost
-summary: Mattermost is an open source, self-hosted Slack-alternative
+summary: Mattermost is an open source, self-hosted Slack-alternative.
 description: |
     From the [Mattermost](http://www.mattermost.org) website:
     
@@ -16,7 +16,13 @@ tags:
     - applications
     - messaging
     - groupware
-maintainer: "Casey Marshall <charmed@cmars.tech>"
+maintainer: "Cmars Technologies, LLC <charmed@cmars.tech>"
 requires:
     db:
         interface: pgsql
+provides:
+    website:
+        interface: http
+series:
+ - trusty
+ - xenial
