@@ -13,9 +13,6 @@ $(JUJU_REPOSITORY)/%/mattermost:
 push:
 	charm push $(JUJU_REPOSITORY)/trusty/mattermost $(CHARM)
 
-publish:
-	charm publish --channel stable $(CHARM)
-
 grant:
 	charm grant $(CHARM) --acl read everyone
 
