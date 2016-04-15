@@ -17,7 +17,7 @@ INSTALL_URL="https://github.com/mattermost/platform/releases/download/v%s/matter
 @hook('install')
 def install():
     conf = hookenv.config()
-    version = conf.get('version', '2.1.0') 
+    version = conf['version']
 
     handler = archiveurl.ArchiveUrlFetchHandler()
     handler.download(INSTALL_URL % version, dest='/opt/mattermost.tar.gz')
@@ -75,8 +75,9 @@ def setup():
         config = json.load(f)
 
     # Config options
-    sysconf = config.setdefault("System", {})
-    sysconf['ListenAddress'] = ':%d' % (conf['port'])
+    svcconf = config.setdefault("ServiceSettings", {})
+    svcconf['ListenAddress'] = ':%d' % (conf['port'])
+
     teamconf = config.setdefault("TeamSettings", {})
     teamconf['SiteName'] = conf['site_name']
     
