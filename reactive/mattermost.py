@@ -11,16 +11,14 @@ from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 
-INSTALL_URL="https://github.com/mattermost/platform/releases/download/v%s/mattermost.tar.gz"
-
-
 @hook('install')
 def install():
     conf = hookenv.config()
     version = conf['version']
+    install_url = conf['install_url']
 
     handler = archiveurl.ArchiveUrlFetchHandler()
-    handler.download(INSTALL_URL % version, dest='/opt/mattermost.tar.gz')
+    handler.download(install_url % conf, dest='/opt/mattermost.tar.gz')
 
     extract_tarfile('/opt/mattermost.tar.gz', destpath="/opt")
 

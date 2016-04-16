@@ -3,6 +3,10 @@ options:
     type: string               
     description: Name of service shown in login screens and UI.
     default: "Mattermost"
+  install_url:
+    type: string
+    description: URL location of mattermost release to install, interpolated with config.
+    default: "https://releases.mattermost.com/%(version)s/mattermost-team-%(version)s-linux-amd64.tar.gz"
   version:
     type: string
     description: Version of Mattermost to install.
