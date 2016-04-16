@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+
+import json
+import socket
+import time
+import unittest
+from subprocess import check_call, check_output
+
+
+class TestDeployment(unittest.TestCase):
+    def setUp(self):
+        check_call(['juju', 'deploy', 'cs:~cmars/mattermost'])
+        check_call(['juju', 'deploy', 'postgresql'])
+        check_call(['juju', 'add-relation', 'mattermost', 'postgresql:db'])
+        wait_for('mattermost')
+
+    def test_something_is_listening(self):
+        out = check_output(['juju', 'status', '--format', 'json'], universal_newlines=True)
+        juju_status = json.loads(out)
+        mattermost_info = [x for x in juju_status.get('services', {}).get('mattermost', {}).get('units', {}).values()]
+        if not mattermost_info:
+            raise Exception("missing mattermost service unit")
+        addr = mattermost_info[0]['public-address']
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((addr, 3000))
+
+
+def wait_for(svc, req_status='active', timeout=900):
+    for i in range(0, timeout, 5):
+        out = check_output(['juju', 'status', '--format', 'json'], universal_newlines=True)
+        juju_status = json.loads(out)
+        svc_status = juju_status.get('services', {}).get(svc, {}).get('service-status', {}).get('current')
+        if svc_status == req_status:
+            return
+        time.sleep(5)
+    raise Exception("timeout waiting for %s to reach %s status" % (svc, req_status))
+
+
+if __name__ == '__main__':
+    unittest.main()
