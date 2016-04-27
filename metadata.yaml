@@ -16,13 +16,18 @@ tags:
     - applications
     - messaging
     - groupware
-maintainer: "Cmars Technologies, LLC <charmed@cmars.tech>"
+maintainer: Casey Marshall <charmed@cmars.tech>
 requires:
     db:
         interface: pgsql
 provides:
     website:
         interface: http
+resources:
+    bdist:
+        type: file
+        filename: mattermost.tar.gz
+        description: Binary distribution of Mattermost, obtained from https://www.mattermost.org/download/
 series:
  - trusty
  - xenial

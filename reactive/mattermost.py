@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from subprocess import check_call
 
 from charms.reactive import hook, when, when_not, set_state, remove_state, is_state
 from charmhelpers.core import hookenv
@@ -13,14 +14,41 @@ from charmhelpers.core.unitdata import kv
 
 @hook('install')
 def install():
-    conf = hookenv.config()
-    version = conf['version']
-    install_url = conf['install_url']
+    install_workload()
 
-    handler = archiveurl.ArchiveUrlFetchHandler()
-    handler.download(install_url % conf, dest='/opt/mattermost.tar.gz')
 
-    extract_tarfile('/opt/mattermost.tar.gz', destpath="/opt")
+@hook('upgrade-charm')
+def upgrade_charm():
+    was_running = False
+    if service_running("mattermost"):
+        was_running = True
+        service_stop("mattermost")
+    install_workload()
+    if was_running:
+        service_start("mattermost")
+
+
+def install_workload():
+    # TODO(cmars): contribute resource support to charms.* or charmhelpers.*
+    # Until then, this proves out the feature.
+
+    # `resource-get` provisions the resource from the charmstore, or the controller if
+    # it was specified on deploy. Note that this means if you deploy this charm locally,
+    # you'll _have_ to provide the resource.
+    check_call(['resource-get', 'bdist'])
+
+    # `resource-get` puts the resource in ../resources relative to the
+    # charmstore in a subdirectory with the resource name. The file in there
+    # will have the same name as pushed or specified on deploy.
+    # TODO(cmars): What if the resource is pushed with a different filename but
+    #              same resource name? How would the charm know? Or is that something that
+    #              the charm author shouldn't normally do?
+    resource_path = os.path.join(hookenv.charm_dir(), '..', 'resources', 'bdist', 'mattermost.tar.gz')
+    if not os.path.exists(resource_path):
+        hookenv.status_set('error', 'failed to download resource')
+        return
+
+    extract_tarfile(resource_path, destpath="/opt")
 
     # Create mattermost user & group
     add_group("mattermost")
@@ -78,7 +106,7 @@ def setup():
 
     teamconf = config.setdefault("TeamSettings", {})
     teamconf['SiteName'] = conf['site_name']
-    
+
     # Database
     sqlconf = config.setdefault("SqlSettings", {})
     sqlconf['DriverName'] = 'postgres'

@@ -22,7 +22,7 @@ class TestDeployment(unittest.TestCase):
             raise Exception("missing mattermost service unit")
         addr = mattermost_info[0]['public-address']
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((addr, 3000))
+        s.connect((addr, 8065))
 
 
 def wait_for(svc, req_status='active', timeout=900):
