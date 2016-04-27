@@ -17,7 +17,7 @@ bdist/mattermost.tar.gz:
 	wget -O $@ https://releases.mattermost.com/$(BDIST_VERSION)/mattermost-team-$(BDIST_VERSION)-linux-amd64.tar.gz
 
 push: $(JUJU_REPOSITORY)/trusty/mattermost bdist/mattermost.tar.gz
-	charm push $(JUJU_REPOSITORY)/trusty/mattermost $(CHARM) --resources bdist/mattermost.tar.gz
+	charm push $(JUJU_REPOSITORY)/trusty/mattermost $(CHARM) --resource bdist=bdist/mattermost.tar.gz
 
 grant:
 	charm grant $(CHARM) --acl read everyone
