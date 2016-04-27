@@ -14,9 +14,17 @@ To deploy the locally-built charm:
     $ juju deploy postgresql
     $ juju add-relation postgresql:db mattermost:db
 
+To deploy with your own Mattermost binary distribution:
+
+    $ juju deploy cs:~cmars/mattermost --resource bdist=/path/to/mattermost.tar.gz
+
+Note that Mattermost releases prior to 2.1.0 have not been tested.
+
 ## License
 
-Copyright 2016 Cmars Technologies, LLC.
+Copyright 2016 Casey Marshall.
+
+The [copyright](copyright) file contains the software license for this charm.
 
 Mattermost is a trademark of Mattermost, Inc.
 
