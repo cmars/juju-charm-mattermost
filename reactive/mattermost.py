@@ -98,7 +98,7 @@ def setup():
 
     # Config options
     svcconf = config.setdefault("ServiceSettings", {})
-    svcconf['ListenAddress'] = ':%d' % (conf['port'])
+    svcconf['ListenAddress'] = ':%d' % (conf['mattermost-port'])
 
     teamconf = config.setdefault("TeamSettings", {})
     teamconf['SiteName'] = conf['site_name']
@@ -125,9 +125,10 @@ def configure_webserver():
     """Configure nginx
     """
 
+    conf = hookenv.config()
     hookenv.status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
-                   host=hookenv.unit_private_ip())
+                   mattermost_port=conf['mattermost-port'])
     hookenv.status_set('active', 'Website configured')
     set_state('mattermost.web.configured')
 

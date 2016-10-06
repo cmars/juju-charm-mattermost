@@ -3,7 +3,12 @@ options:
     type: string               
     description: Name of service shown in login screens and UI.
     default: "Mattermost"
+  mattermost-port:
+    type: int
+    description: Mattermost listen port
+    default: 8065
   port:
     type: int
-    description: Listen port
+    description: Nginx listen port
     default: 80
+    
