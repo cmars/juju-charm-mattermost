@@ -6,4 +6,4 @@ options:
   port:
     type: int
     description: Listen port
-    default: 8065
+    default: 80

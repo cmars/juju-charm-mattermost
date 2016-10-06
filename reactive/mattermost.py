@@ -11,6 +11,7 @@ from charmhelpers.fetch import archiveurl, apt_install, apt_update
 from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
+from charms.layer.nginx import configure_site
 
 @hook('install')
 def install():
@@ -58,9 +59,10 @@ def install_workload():
         os.makedirs(os.path.join("/opt/mattermost", dir), mode=0o700, exist_ok=True)
         shutil.chown(os.path.join("/opt/mattermost", dir), user="mattermost", group="mattermost")
 
-    render(source='upstart',
-        target="/etc/init/mattermost.conf",
+    render(source='mattermost.service.tmpl',
+        target="/etc/systemd/system/mattermost.service",
         perms=0o644,
+        owner=root,
         context={})
     hookenv.status_set('maintenance', 'installation complete')
 
@@ -75,18 +77,12 @@ def config_changed():
     setup()
 
 
-@when("db.database.available")
+@when("db.master.available")
 def db_available(db):
     unit_data = kv()
-    unit_data.set('db', {
-        'host': db.host(),
-        'port': db.port(),
-        'user': db.user(),
-        'password': db.password(),
-        'database': db.database(),
-    })
+    unit_data.set('db', db.master.uri)
     setup()
-    remove_state("db.database.available")
+    remove_state("db.master.available")
 
 
 def setup():
@@ -110,15 +106,30 @@ def setup():
     # Database
     sqlconf = config.setdefault("SqlSettings", {})
     sqlconf['DriverName'] = 'postgres'
-    sqlconf['DataSource'] = 'postgres://%(user)s:%(password)s@%(host)s:%(port)s/%(database)s?sslmode=disable&connect_timeout=10' % db
+    sqlconf['DataSource'] = '%s?sslmode=disable&connect_timeout=10' % db
 
     with open("/opt/mattermost/config/config.json", "w") as f:
         json.dump(config, f)
-    remove_state("db.database.available")
+    remove_state("db.master.available")
 
     restart_service()
+
+    set_state("mattermost.initialized")
+
     hookenv.status_set('active', 'ready')
 
+
+@when('nginx.available', 'mattermost.initialized')
+@when_not('mattermost.web.configured')
+def configure_webserver():
+    """Configure nginx
+    """
+
+    status_set('maintenance', 'Configuring website')
+    configure_site('mattermost', 'mattermost.nginx.tmpl',
+                   host=hookenv.unit_private_ip())
+    status_set('active', 'Website configured')
+    set_state('mattermost.web.configured')
 
 def restart_service():
     if service_running("mattermost"):

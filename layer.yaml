@@ -1,5 +1,6 @@
 includes:
  - 'layer:basic'
+ - 'layer:nginx'
  - 'interface:pgsql'
  - 'interface:http'
 repo: https://github.com/cmars/juju-charm-mattermost.git

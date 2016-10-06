@@ -1,0 +1,9 @@
+[Unit]
+Description=Mattermost
+
+[Service]
+Type=simple
+User=mattermost
+Group=mattermost
+WorkingDirectory=/opt/mattermost
+ExecStart= /opt/mattermost/bin/platform
