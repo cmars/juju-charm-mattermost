@@ -59,10 +59,10 @@ def install_workload():
         os.makedirs(os.path.join("/opt/mattermost", dir), mode=0o700, exist_ok=True)
         shutil.chown(os.path.join("/opt/mattermost", dir), user="mattermost", group="mattermost")
 
-    render(source='mattermost.service.tmpl',
+    render(source="mattermost.service.tmpl",
         target="/etc/systemd/system/mattermost.service",
         perms=0o644,
-        owner=root,
+        owner="root",
         context={})
     hookenv.status_set('maintenance', 'installation complete')
 
