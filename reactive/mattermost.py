@@ -125,10 +125,10 @@ def configure_webserver():
     """Configure nginx
     """
 
-    status_set('maintenance', 'Configuring website')
+    hookenv.status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    host=hookenv.unit_private_ip())
-    status_set('active', 'Website configured')
+    hookenv.status_set('active', 'Website configured')
     set_state('mattermost.web.configured')
 
 def restart_service():
