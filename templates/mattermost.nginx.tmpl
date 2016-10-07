@@ -1,7 +1,25 @@
- server {
-   server_name _;
+server {
+   listen         {{port}};
+   server_name    {{fqdn}};
+   return         301 https://$server_name$request_uri;
+}
+
+server {
+   listen 443 ssl;
+   server_name {{fqdn}};
+
+   ssl on;
+   ssl_certificate {{crt_path}};
+   ssl_certificate_key {{key_path}};
+   ssl_session_timeout 5m;
+   ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+   ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
+   ssl_prefer_server_ciphers on;
+   ssl_session_cache shared:SSL:10m;
 
    location / {
+      gzip off;
+      proxy_set_header X-Forwarded-Ssl on;
       client_max_body_size 50M;
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";

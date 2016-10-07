@@ -1,6 +1,7 @@
 includes:
  - 'layer:basic'
  - 'layer:nginx'
+ - 'layer:tls-client'
  - 'interface:pgsql'
  - 'interface:http'
 repo: https://github.com/cmars/juju-charm-mattermost.git
