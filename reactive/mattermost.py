@@ -38,7 +38,12 @@ from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 from charms.layer.nginx import configure_site
-from charms import layer
+from charms.layer import options
+
+
+opts = options('tls-client')
+SRV_KEY = opts.get('server_key_path')
+SRV_CRT = opts.get('server_certificate_path')
 
 
 @hook('upgrade-charm')
@@ -167,23 +172,18 @@ def save_crt_key(tls):
     '''Read the server crt/key from the relation object and
     write to /etc/ssl/certs'''
 
-    opts = layer.options('tls-client')
-    crt = opts.get('server_certificate_path')
-    key = opts.get('server_key_path')
-    # Set location of crt/key in unitdata
-    unit_data = kv()
-    unit_data.set('crt_path', crt)
-    unit_data.set('key_path', key)
     # Remove the crt/key if they pre-exist
-    if os.path.exists(crt):
-        os.remove(crt)
-    if os.path.exists(key):
-        os.remove(key)
+    if os.path.exists(SRV_CRT):
+        os.remove(SRV_CRT)
+    if os.path.exists(SRV_KEY):
+        os.remove(SRV_KEY)
+
     # Get and write out crt/key
     server_cert, server_key = tls.get_server_cert()
-    with open(crt, 'w') as crt_file:
+
+    with open(SRV_CRT, 'w') as crt_file:
         crt_file.write(server_cert)
-    with open(key, 'w') as key_file:
+    with open(SRV_KEY, 'w') as key_file:
         key_file.write(server_key)
 
     status_set('active', 'TLS crt/key ready')
@@ -197,12 +197,10 @@ def configure_webserver():
     """Configure nginx
     """
 
-    unit_data = kv()
-
     status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
-                   key_path=unit_data.get('key_path'),
-                   crt_path=unit_data.get('crt_path'), fqdn=config('fqdn'))
+                   key_path=SRV_KEY,
+                   crt_path=SRV_CRT, fqdn=config('fqdn'))
     open_port(443)
     restart_service()
     status_set('active', 'Mattermost available: %s' % unit_public_ip())
