@@ -107,6 +107,13 @@ def get_set_db_data(db):
 @when('mattermost.db.available', 'mattermost.installed')
 @when_not('mattermost.initialized')
 def configure_mattermost():
+    """Call setup
+    """
+    setup()
+    set_state("mattermost.initialized")
+
+
+def setup():
     """Gather and write out mattermost configs
     """
 
@@ -136,8 +143,6 @@ def configure_mattermost():
         json.dump(config_file, f)
 
     restart_service()
-
-    set_state("mattermost.initialized")
     status_set('active', 'Mattermost configured')
 
 
@@ -200,7 +205,7 @@ def configure_webserver():
                    crt_path=unit_data.get('crt_path'), fqdn=config('fqdn'))
     open_port(443)
     restart_service()
-    status_set('active', 'Website configured')
+    status_set('active', 'Mattermost available: %s' % unit_public_ip())
     set_state('mattermost.web.configured')
 
 
