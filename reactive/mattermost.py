@@ -123,7 +123,7 @@ def setup():
     teamconf['SiteName'] = conf['site_name']
 
     # Database
-    sqlconf = config.setdefault("SqlSettings", {})
+    sqlconf = config_file.setdefault("SqlSettings", {})
     sqlconf['DriverName'] = 'postgres'
     sqlconf['DataSource'] = '%s?sslmode=disable&connect_timeout=10' % db
 
