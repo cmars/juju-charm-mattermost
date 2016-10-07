@@ -96,15 +96,20 @@ def config_changed():
     setup()
 
 
-@when("db.master.available")
-def db_available(db):
+@when_not('mattermost.db.available')
+@when('db.master.available')
+def get_set_db_data(db):
     unit_data = kv()
     unit_data.set('db', db.master.uri)
-    setup()
-    remove_state("db.master.available")
+    set_state('mattermost.db.available')
 
 
-def setup():
+@when('mattermost.db.available', 'mattermost.installed')
+@when_not('mattermost.initialized')
+def configure_mattermost():
+    """Gather and write out mattermost configs
+    """
+
     unit_data = kv()
     db = unit_data.get('db')
     if not db:
@@ -188,12 +193,11 @@ def configure_webserver():
     """
 
     unit_data = kv()
-    conf = config()
 
     status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=unit_data.get('key_path'),
-                   crt_path=unit_data.get('crt_path'), fqdn=conf['fqdn'])
+                   crt_path=unit_data.get('crt_path'), fqdn=config('fqdn'))
     open_port(443)
     restart_service()
     status_set('active', 'Website configured')
