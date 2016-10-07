@@ -1,25 +1,25 @@
 import json
 import os
 import shutil
-from subprocess import check_call
+import socket
 
 from charms.reactive import (
     hook,
     when,
     when_not,
     set_state,
-    remove_state,
-    is_state
+    remove_state
 )
 
 from charmhelpers.core.hookenv import (
     status_set,
-    charm_dir,
     close_port,
     open_port,
     unit_public_ip,
     unit_private_ip,
-    resource_get
+    resource_get,
+    config,
+    local_unit
 )
 
 from charmhelpers.core.host import (
@@ -29,20 +29,20 @@ from charmhelpers.core.host import (
     group_exists,
     service_running,
     service_start,
+    service_stop,
     service_restart
 )
 
 from charmhelpers.core.templating import render
-from charmhelpers.fetch import archiveurl, apt_install, apt_update
 from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 from charms.layer.nginx import configure_site
+from charms.layer import options
 
 
 @hook('upgrade-charm')
 def upgrade_charm():
-    was_running = False
     if service_running("mattermost"):
         service_stop("mattermost")
         remove_state('mattermost.installed')
@@ -71,23 +71,24 @@ def install_mattermost():
 
     # Create data + log + config dirs
     for dir in ("data", "logs", "config"):
-        os.makedirs(os.path.join("/srv/mattermost", dir), mode=0o700, exist_ok=True)
-        shutil.chown(os.path.join("/srv/mattermost", dir), user="mattermost", group="mattermost")
+        os.makedirs(os.path.join("/srv/mattermost", dir), mode=0o700,
+                    exist_ok=True)
+        shutil.chown(os.path.join("/srv/mattermost", dir), user="mattermost",
+                     group="mattermost")
 
     # Render systemd template
     render(source="mattermost.service.tmpl",
-        target="/etc/systemd/system/mattermost.service",
-        perms=0o644,
-        owner="root",
-        context={}
-    )
-    set_state('mattermost.installed')    
+           target="/etc/systemd/system/mattermost.service",
+           perms=0o644,
+           owner="root",
+           context={})
+    set_state('mattermost.installed')
     status_set('active', 'Mattermost installation complete')
 
 
 @hook('config-changed')
 def config_changed():
-    conf = hookenv.config()
+    conf = config()
     if conf.changed('port') and conf.previous('port'):
         close_port(conf.previous('port'))
     if conf.get('port'):
@@ -110,15 +111,15 @@ def setup():
         status_set('blocked', 'need relation to postgresql')
         return
 
-    conf = hookenv.config()
+    conf = config()
     with open("/srv/mattermost/config/config.json", "r") as f:
-        config = json.load(f)
+        config_file = json.load(f)
 
     # Config options
-    svcconf = config.setdefault("ServiceSettings", {})
-    svcconf['ListenAddress'] = ':8065' 
+    svcconf = config_file.setdefault("ServiceSettings", {})
+    svcconf['ListenAddress'] = ':8065'
 
-    teamconf = config.setdefault("TeamSettings", {})
+    teamconf = config_file.setdefault("TeamSettings", {})
     teamconf['SiteName'] = conf['site_name']
 
     # Database
@@ -127,12 +128,11 @@ def setup():
     sqlconf['DataSource'] = '%s?sslmode=disable&connect_timeout=10' % db
 
     with open("/srv/mattermost/config/config.json", "w") as f:
-        json.dump(config, f)
+        json.dump(config_file, f)
 
     restart_service()
 
     set_state("mattermost.initialized")
-
     status_set('active', 'Mattermost configured')
 
 
@@ -143,10 +143,10 @@ def send_data(tls):
     # Get a list of Subject Alt Names for the certificate.
     sans = []
     sans.append(unit_public_ip())
-    sans.append(.unit_private_ip())
+    sans.append(unit_private_ip())
     sans.append(socket.gethostname())
     # Create a path safe name by removing path characters from the unit name.
-    certificate_name = hookenv.local_unit().replace('/', '_')
+    certificate_name = local_unit().replace('/', '_')
     # Send the information on the relation object.
     tls.request_server_cert(common_name, sans, certificate_name)
 
@@ -157,9 +157,9 @@ def save_crt_key(tls):
     '''Read the server crt/key from the relation object and
     write to /etc/ssl/certs'''
 
-    opts = options('nginx')
-    crt = os.path.join(opts.get('ssl-dir'), "server.crt")
-    key = os.path.join(opts.get('ssl-dir'), "server.key")
+    opts = options('tls-client')
+    crt = os.path.join(opts.get('server_certificate_path'))
+    key = os.path.join(opts.get('server_key_path'))
     # Set location of crt/key in unitdata
     unit_data = kv()
     unit_data.set('crt_path', crt)
@@ -178,7 +178,7 @@ def save_crt_key(tls):
 
     status_set('active', 'TLS crt/key ready')
     set_state('mattermost.ssl.available')
- 
+
 
 @when('nginx.available', 'mattermost.ssl.available',
       'mattermost.initialized')
@@ -188,15 +188,17 @@ def configure_webserver():
     """
 
     unit_data = kv()
-    conf = hookenv.config()
+    conf = config()
 
     status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=unit_data.get('key_path'),
                    crt_path=unit_data.get('crt_path'), fqdn=conf['fqdn'])
-    hookenv.status_set('active', 'Website configured')
-    hookenv.open_port(443)
+    open_port(443)
+    restart_service()
+    status_set('active', 'Website configured')
     set_state('mattermost.web.configured')
+
 
 def restart_service():
     if service_running("mattermost"):
@@ -207,5 +209,5 @@ def restart_service():
 
 @when('website.available')
 def setup_website(website):
-    conf = hookenv.config()
+    conf = config()
     website.configure(conf['port'])

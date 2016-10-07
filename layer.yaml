@@ -6,6 +6,12 @@ includes:
  - 'interface:http'
 repo: https://github.com/cmars/juju-charm-mattermost.git
 options:
-    basic:
-        packages:
-         - '--no-install-recommends'
+  tls-client:
+    ca_certificate_path: "/etc/ssl/certs/ca.crt"
+    sever_certificate_path: "/etc/ssl/certs/server.crt"
+    server_key_path: "/etc/ssl/certs/server.key"
+    client_certificate_path: "/etc/ssl/certs/client.crt"
+    client_key_path: "/etc/ssl/certs/client.key"
+  basic:
+    packages:
+      - '--no-install-recommends'

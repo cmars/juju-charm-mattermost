@@ -6,4 +6,6 @@ Type=simple
 User=mattermost
 Group=mattermost
 WorkingDirectory=/srv/mattermost
-ExecStart= /srv/mattermost/bin/platform
+ExecStart=/srv/mattermost/bin/platform
+Restart=always
+RestartSec=1
