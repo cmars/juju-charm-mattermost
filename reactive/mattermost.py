@@ -38,7 +38,7 @@ from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 from charms.layer.nginx import configure_site
-from charms.layer import options
+from charms import layer
 
 
 @hook('upgrade-charm')
@@ -167,9 +167,9 @@ def save_crt_key(tls):
     '''Read the server crt/key from the relation object and
     write to /etc/ssl/certs'''
 
-    opts = options('tls-client')
-    crt = os.path.join(opts.get('server_certificate_path'))
-    key = os.path.join(opts.get('server_key_path'))
+    opts = layer.options('tls-client')
+    crt = opts.get('server_certificate_path')
+    key = opts.get('server_key_path')
     # Set location of crt/key in unitdata
     unit_data = kv()
     unit_data.set('crt_path', crt)
