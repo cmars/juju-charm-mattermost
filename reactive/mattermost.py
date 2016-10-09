@@ -3,6 +3,8 @@ import os
 import shutil
 import socket
 
+from subprocess import check_call
+
 from charms.reactive import (
     hook,
     when,
@@ -87,6 +89,7 @@ def install_mattermost():
            perms=0o644,
            owner="root",
            context={})
+    check_call(['systemctl', 'daemon-reload'])
     set_state('mattermost.installed')
     status_set('active', 'Mattermost installation complete')
 
@@ -99,6 +102,10 @@ def config_changed():
     if conf.get('port'):
         open_port(conf['port'])
     setup()
+
+    # If fqdn has changed, need to rewrite the nginx config as well.
+    if conf.changed('fqdn'):
+        configure_webserver()
 
 
 @when_not('mattermost.db.available')
@@ -190,6 +197,12 @@ def save_crt_key(tls):
     set_state('mattermost.ssl.available')
 
 
+@when_not('mattermost.ssl.available')
+@when('mattermost.initialized')
+def need_certificate():
+    status_set('blocked', 'waiting for TLS certificate')
+
+
 @when('nginx.available', 'mattermost.ssl.available',
       'mattermost.initialized')
 @when_not('mattermost.web.configured')
@@ -200,18 +213,18 @@ def configure_webserver():
     status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=SRV_KEY,
-                   crt_path=SRV_CRT, fqdn=config('fqdn'))
+                   crt_path=SRV_CRT, fqdn=config('fqdn', unit_public_ip()))
     open_port(443)
-    restart_service()
+    restart_service('nginx')
     status_set('active', 'Mattermost available: %s' % unit_public_ip())
     set_state('mattermost.web.configured')
 
 
-def restart_service():
-    if service_running("mattermost"):
-        service_restart("mattermost")
+def restart_service(name='mattermost'):
+    if service_running(name):
+        service_restart(name)
     else:
-        service_start("mattermost")
+        service_start(name)
 
 
 @when('website.available')
