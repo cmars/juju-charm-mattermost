@@ -12,7 +12,9 @@ To deploy the locally-built charm:
 
     $ juju deploy cs:~cmars/mattermost
     $ juju deploy postgresql
+    $ juju deploy cs:~containers/easyrsa
     $ juju add-relation postgresql:db mattermost:db
+    $ juju add-relation easyrsa mattermost
 
 To deploy with your own Mattermost binary distribution:
 
