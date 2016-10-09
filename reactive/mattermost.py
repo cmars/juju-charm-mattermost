@@ -213,7 +213,7 @@ def configure_webserver():
     status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=SRV_KEY,
-                   crt_path=SRV_CRT, fqdn=config('fqdn', unit_public_ip()))
+                   crt_path=SRV_CRT, fqdn=config().get('fqdn', unit_public_ip()))
     open_port(443)
     restart_service('nginx')
     status_set('active', 'Mattermost available: %s' % unit_public_ip())
