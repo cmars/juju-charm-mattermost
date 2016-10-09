@@ -29,5 +29,4 @@ resources:
         filename: mattermost.tar.gz
         description: Binary distribution of Mattermost, obtained from https://www.mattermost.org/download/
 series:
- - trusty
  - xenial

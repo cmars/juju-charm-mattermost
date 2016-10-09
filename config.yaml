@@ -3,7 +3,12 @@ options:
     type: string               
     description: Name of service shown in login screens and UI.
     default: "Mattermost"
+  fqdn:                       
+    type: string               
+    description: Fqdn of mattermost server to use
+    default: "mattermost.example.com"
   port:
     type: int
-    description: Listen port
-    default: 8065
+    description: Nginx listen port
+    default: 80
+    
