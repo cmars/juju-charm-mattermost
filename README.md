@@ -33,21 +33,13 @@ If registration fails, check:
 
 - That you've exposed mattermost. Let's Encrypt needs to connect to ports 80
   and 443 as part of the registration process.
-- That the DNS name has had time to propagate.
+- That the DNS name has had time to propagate and cached entries have expired.
 - That the DNS name is allowed by Let's Encrypt. Some names, like the dynamic
   ones given to EC2 instances, may not be allowed.
 
-### Secured with your own TLS PKI regime
-
-This charm also supports `interface:tls-client`, so you can use your own CA.
-
-    juju deploy cs:~cmars/mattermost
-    juju deploy postgresql
-    juju deploy cs:~containers/easyrsa
-    juju add-relation postgresql:db mattermost:db
-    juju add-relation easyrsa mattermost
-
 ### Reverse-proxied by a front-end
+
+With `fqdn` unset, relate mattermost to a reverse proxy.
 
     juju deploy cs:~cmars/mattermost
     juju deploy postgresql
