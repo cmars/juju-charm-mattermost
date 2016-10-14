@@ -40,6 +40,7 @@ from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 from charms.layer.nginx import configure_site
+from charms.layer import letsencrypt
 from charms.layer import options
 
 
@@ -105,7 +106,7 @@ def config_changed():
 
     # If fqdn has changed, need to rewrite the nginx config as well.
     if conf.changed('fqdn'):
-        configure_webserver()
+        remove_state('mattermost.web.configured')
 
 
 @when_not('mattermost.db.available')
@@ -160,6 +161,7 @@ def setup():
 
 @when('certificates.available')
 def send_data(tls):
+    set_state('lets-encrypt.disable')
     # Use the public ip of this unit as the Common Name for the certificate.
     common_name = unit_public_ip()
     # Get a list of Subject Alt Names for the certificate.
@@ -179,6 +181,7 @@ def save_crt_key(tls):
     '''Read the server crt/key from the relation object and
     write to /etc/ssl/certs'''
 
+    set_state('lets-encrypt.disable')
     # Remove the crt/key if they pre-exist
     if os.path.exists(SRV_CRT):
         os.remove(SRV_CRT)
@@ -200,23 +203,50 @@ def save_crt_key(tls):
 @when_not('mattermost.ssl.available')
 @when('mattermost.initialized')
 def need_certificate():
+    remove_state('lets-encrypt.disable')
     status_set('blocked', 'waiting for TLS certificate')
+
+
+@when('nginx.available', 'lets-encrypt.registered',
+      'mattermost.initialized')
+@when_not('mattermost.web.configured')
+def configure_webserver_le():
+    """Configure nginx
+    """
+
+    status_set('maintenance', 'Configuring website')
+    fqdn = config().get('fqdn')
+    live = letsencrypt.live()
+    configure_site('mattermost', 'mattermost.nginx.tmpl',
+                   key_path=live['privkey'],
+                   crt_path=live['fullchain'], fqdn=fqdn)
+    open_port(443)
+    restart_service('nginx')
+    status_set('active', 'Mattermost available: https://%s' % fqdn)
+    set_state('mattermost.web.configured')
+
+
+def restart_service(name='mattermost'):
+    if service_running(name):
+        service_restart(name)
+    else:
+        service_start(name)
 
 
 @when('nginx.available', 'mattermost.ssl.available',
       'mattermost.initialized')
 @when_not('mattermost.web.configured')
-def configure_webserver():
+def configure_webserver_tls():
     """Configure nginx
     """
-
+    fqdn = config().get('fqdn', unit_public_ip())
     status_set('maintenance', 'Configuring website')
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=SRV_KEY,
-                   crt_path=SRV_CRT, fqdn=config().get('fqdn', unit_public_ip()))
+                   crt_path=SRV_CRT, fqdn=fqdn)
     open_port(443)
     restart_service('nginx')
-    status_set('active', 'Mattermost available: %s' % unit_public_ip())
+    status_set('active', 'Mattermost available: %s' % fqdn)
     set_state('mattermost.web.configured')
 
 
