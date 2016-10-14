@@ -6,8 +6,3 @@ options:
   fqdn:                       
     type: string               
     description: FQDN of mattermost server to use. For example, 'mattermost.example.com'.
-  port:
-    type: int
-    description: Nginx listen port
-    default: 80
- 
