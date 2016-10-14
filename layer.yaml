@@ -1,14 +1,6 @@
 includes:
  - 'layer:basic'
- - 'layer:nginx'
- - 'layer:tls-client'
+ - 'layer:lets-encrypt'
  - 'interface:pgsql'
  - 'interface:http'
 repo: https://github.com/cmars/juju-charm-mattermost.git
-options:
-  tls-client:
-    ca_certificate_path: "/etc/ssl/certs/ca.crt"
-    server_certificate_path: "/etc/ssl/certs/server.crt"
-    server_key_path: "/etc/ssl/certs/server.key"
-    client_certificate_path: "/etc/ssl/certs/client.crt"
-    client_key_path: "/etc/ssl/certs/client.key"

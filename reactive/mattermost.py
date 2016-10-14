@@ -40,19 +40,14 @@ from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 from charms.layer.nginx import configure_site
-from charms.layer import options
-
-
-opts = options('tls-client')
-SRV_KEY = opts.get('server_key_path')
-SRV_CRT = opts.get('server_certificate_path')
+from charms.layer import letsencrypt
 
 
 @hook('upgrade-charm')
 def upgrade_charm():
     if service_running("mattermost"):
         service_stop("mattermost")
-        remove_state('mattermost.installed')
+    remove_state('mattermost.installed')
 
 
 @when_not('mattermost.installed')
@@ -97,15 +92,14 @@ def install_mattermost():
 @hook('config-changed')
 def config_changed():
     conf = config()
-    if conf.changed('port') and conf.previous('port'):
-        close_port(conf.previous('port'))
-    if conf.get('port'):
-        open_port(conf['port'])
     setup()
 
     # If fqdn has changed, need to rewrite the nginx config as well.
     if conf.changed('fqdn'):
-        configure_webserver()
+        remove_state('mattermost.web.configured')
+    # If fqdn is configured, enable LE
+    if conf.get('fqdn'):
+        remove_state('lets-encrypt.disabled')
 
 
 @when_not('mattermost.db.available')
@@ -158,65 +152,24 @@ def setup():
     status_set('active', 'Mattermost configured')
 
 
-@when('certificates.available')
-def send_data(tls):
-    # Use the public ip of this unit as the Common Name for the certificate.
-    common_name = unit_public_ip()
-    # Get a list of Subject Alt Names for the certificate.
-    sans = []
-    sans.append(unit_public_ip())
-    sans.append(unit_private_ip())
-    sans.append(socket.gethostname())
-    # Create a path safe name by removing path characters from the unit name.
-    certificate_name = local_unit().replace('/', '_')
-    # Send the information on the relation object.
-    tls.request_server_cert(common_name, sans, certificate_name)
-
-
-@when('certificates.server.cert.available')
-@when_not('mattermost.ssl.available')
-def save_crt_key(tls):
-    '''Read the server crt/key from the relation object and
-    write to /etc/ssl/certs'''
-
-    # Remove the crt/key if they pre-exist
-    if os.path.exists(SRV_CRT):
-        os.remove(SRV_CRT)
-    if os.path.exists(SRV_KEY):
-        os.remove(SRV_KEY)
-
-    # Get and write out crt/key
-    server_cert, server_key = tls.get_server_cert()
-
-    with open(SRV_CRT, 'w') as crt_file:
-        crt_file.write(server_cert)
-    with open(SRV_KEY, 'w') as key_file:
-        key_file.write(server_key)
-
-    status_set('active', 'TLS crt/key ready')
-    set_state('mattermost.ssl.available')
-
-
-@when_not('mattermost.ssl.available')
-@when('mattermost.initialized')
-def need_certificate():
-    status_set('blocked', 'waiting for TLS certificate')
-
-
-@when('nginx.available', 'mattermost.ssl.available',
+@when('nginx.available', 'lets-encrypt.registered',
       'mattermost.initialized')
 @when_not('mattermost.web.configured')
-def configure_webserver():
+def configure_webserver_le():
     """Configure nginx
     """
 
     status_set('maintenance', 'Configuring website')
+    fqdn = config().get('fqdn')
+    live = letsencrypt.live()
     configure_site('mattermost', 'mattermost.nginx.tmpl',
-                   key_path=SRV_KEY,
-                   crt_path=SRV_CRT, fqdn=config().get('fqdn', unit_public_ip()))
+                   key_path=live['privkey'],
+                   crt_path=live['fullchain'], fqdn=fqdn)
+    open_port(80)
     open_port(443)
+    close_port(8065)
     restart_service('nginx')
-    status_set('active', 'Mattermost available: %s' % unit_public_ip())
+    status_set('active', 'Mattermost available: https://%s' % fqdn)
     set_state('mattermost.web.configured')
 
 
@@ -229,5 +182,8 @@ def restart_service(name='mattermost'):
 
 @when('website.available')
 def setup_website(website):
-    conf = config()
-    website.configure(conf['port'])
+    set_state('lets-encrypt.disable')
+    close_port(80)
+    close_port(443)
+    open_port(8065)
+    website.configure(8065)
