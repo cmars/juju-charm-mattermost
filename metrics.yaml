@@ -1,0 +1,21 @@
+metrics:
+    users:
+        type: gauge
+        description: number of users
+        command: scripts/usercount.py
+    teams:
+        type: gauge
+        description: number of teams
+        command: scripts/teamcount.py
+    posts:
+        type: gauge
+        description: number of posts
+        command: scripts/postcount.py
+    sessions:
+        type: gauge
+        description: number of sessions
+        command: scripts/sessioncount.py
+    channels:
+        type: gauge
+        description: number of channels across all teams
+        command: scripts/channelcount.py

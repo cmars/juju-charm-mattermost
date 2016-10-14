@@ -1,6 +1,11 @@
 includes:
  - 'layer:basic'
  - 'layer:lets-encrypt'
+ - 'layer:metrics'
  - 'interface:pgsql'
  - 'interface:http'
 repo: https://github.com/cmars/juju-charm-mattermost.git
+options:
+  apt:
+    packages:                  
+      - python3-psycopg2
