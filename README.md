@@ -80,5 +80,5 @@ Email: charmed at cmars.tech
 
 IRC: cmars on FreeNode
 
-Mattermost: Coming soon...
+Mattermost: Join the [Juju team on live.cmars.tech](https://live.cmars.tech/signup_user_complete/?id=wccpdu6dqp88mjkqbngnws6ohc)
 
