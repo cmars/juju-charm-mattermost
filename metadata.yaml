@@ -16,6 +16,8 @@ tags:
     - applications
     - messaging
     - groupware
+series:
+  - xenial
 maintainer: Casey Marshall <charmed@cmars.tech>
 requires:
     db:
