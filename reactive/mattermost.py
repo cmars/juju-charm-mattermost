@@ -40,7 +40,7 @@ from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
 from charms.layer.nginx import configure_site
-from charms.layer import letsencrypt
+from charms.layer import lets_encrypt
 
 
 @hook('upgrade-charm')
@@ -53,7 +53,7 @@ def upgrade_charm():
 @when_not('mattermost.installed')
 def install_mattermost():
     """Grab the mattermost binary, unpack, install
-    to /opt.
+    to /srv.
     """
 
     status_set('maintenance', "Installing Mattermost")
@@ -161,7 +161,7 @@ def configure_webserver_le():
 
     status_set('maintenance', 'Configuring website')
     fqdn = config().get('fqdn')
-    live = letsencrypt.live()
+    live = lets_encrypt.live()
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=live['privkey'],
                    crt_path=live['fullchain'], fqdn=fqdn)
