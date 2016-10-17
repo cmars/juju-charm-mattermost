@@ -161,7 +161,7 @@ def configure_webserver_le():
 
     status_set('maintenance', 'Configuring website')
     fqdn = config().get('fqdn')
-    live = letse_ncrypt.live()
+    live = lets_encrypt.live()
     configure_site('mattermost', 'mattermost.nginx.tmpl',
                    key_path=live['privkey'],
                    crt_path=live['fullchain'], fqdn=fqdn)
