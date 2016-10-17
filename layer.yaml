@@ -1,5 +1,6 @@
 includes:
  - 'layer:basic'
+ - 'layer:nginx'
  - 'layer:lets-encrypt'
  - 'layer:metrics'
  - 'interface:pgsql'
@@ -9,3 +10,5 @@ options:
   apt:
     packages:                  
       - python3-psycopg2
+  lets-encrypt:
+    service-name: nginx
