@@ -1,29 +1,32 @@
+#!/usr/bin/env python3
+#
+# Copyright 2016 Casey Marshall
+# Copyright 2017 Ghent University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import json
 import os
 import shutil
-import socket
-
 from subprocess import check_call
-
-from charms.reactive import (
-    hook,
-    when,
-    when_not,
-    set_state,
-    remove_state
-)
 
 from charmhelpers.core.hookenv import (
     status_set,
     close_port,
     open_port,
-    unit_public_ip,
-    unit_private_ip,
     resource_get,
     config,
-    local_unit
 )
-
 from charmhelpers.core.host import (
     add_group,
     adduser,
@@ -32,15 +35,23 @@ from charmhelpers.core.host import (
     service_running,
     service_start,
     service_stop,
-    service_restart
+    service_restart,
 )
 
 from charmhelpers.core.templating import render
 from charmhelpers.payload.archive import extract_tarfile
 from charmhelpers.core.unitdata import kv
 
-from charms.layer.nginx import configure_site
-from charms.layer import lets_encrypt
+from charms.reactive import (
+    hook,
+    when,
+    when_not,
+    set_state,
+    remove_state,
+)
+
+from charms.layer.nginx import configure_site  # pylint:disable=E0611,E0401
+from charms.layer import lets_encrypt  # pylint:disable=E0611,E0401
 
 
 @hook('upgrade-charm')
@@ -65,17 +76,17 @@ def install_mattermost():
         adduser("mattermost", system_user=True)
 
     # Get and uppack resource
-    if os.path.exists('/srv/mattermost'):
-        shutil.rmtree('/srv/mattermost')
+    if os.path.exists('/opt/mattermost'):
+        shutil.rmtree('/opt/mattermost')
 
     mattermost_bdist = resource_get('bdist')
     extract_tarfile(mattermost_bdist, destpath="/srv")
 
     # Create data + log + config dirs
-    for dir in ("data", "logs", "config"):
-        os.makedirs(os.path.join("/srv/mattermost", dir), mode=0o700,
+    for folder in ("data", "logs", "config"):
+        os.makedirs(os.path.join("/opt/mattermost", folder), mode=0o700,
                     exist_ok=True)
-        shutil.chown(os.path.join("/srv/mattermost", dir), user="mattermost",
+        shutil.chown(os.path.join("/opt/mattermost", folder), user="mattermost",
                      group="mattermost")
 
     # Render systemd template
@@ -130,7 +141,7 @@ def setup():
         return
 
     conf = config()
-    with open("/srv/mattermost/config/config.json", "r") as f:
+    with open("/opt/mattermost/config/config.json", "r") as f:
         config_file = json.load(f)
 
     # Config options
@@ -145,7 +156,7 @@ def setup():
     sqlconf['DriverName'] = 'postgres'
     sqlconf['DataSource'] = '%s?sslmode=disable&connect_timeout=10' % db
 
-    with open("/srv/mattermost/config/config.json", "w") as f:
+    with open("/opt/mattermost/config/config.json", "w") as f:
         json.dump(config_file, f)
 
     restart_service()

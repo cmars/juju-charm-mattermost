@@ -5,10 +5,10 @@ includes:
  - 'layer:metrics'
  - 'interface:pgsql'
  - 'interface:http'
-repo: https://github.com/cmars/juju-charm-mattermost.git
+repo: https://github.com/IBCNServices/layer-mattermost.git
 options:
   apt:
-    packages:                  
+    packages:
       - python3-psycopg2
   lets-encrypt:
     service-name: nginx
