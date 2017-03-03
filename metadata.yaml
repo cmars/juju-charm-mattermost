@@ -18,7 +18,7 @@ tags:
     - groupware
 maintainer: Merlijn Sebrechts <merlijn.sebrechts@gmail.com>
 requires:
-    db:
+    postgres:
         interface: pgsql
 provides:
     website:
@@ -28,3 +28,4 @@ resources:
         type: file
         filename: mattermost.tar.gz
         description: Binary distribution of Mattermost, obtained from https://www.mattermost.org/download/
+series: ['xenial']
