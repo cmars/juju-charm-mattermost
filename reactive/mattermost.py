@@ -39,6 +39,7 @@ from charmhelpers.core.host import (
     service_running,
     service_stop,
     service_restart,
+    chownr,
 )
 
 from charmhelpers.core.templating import render
@@ -114,7 +115,7 @@ def setup_mattermost_backend(postgres_relation):
     #    no ssl certificate before `expose`.
     open_port(config().get('port'))
     open_port(443)
-    status_set('active', 'Ready (http://{}:8065 [insecure])'.format(unit_public_ip()))
+    status_set('active', 'Ready (http://{}:8065 [Insecure! Please set fqdn!])'.format(unit_public_ip()))
     set_state('mattermost.backend.started')
 
 
@@ -194,12 +195,9 @@ def _install_mattermost():
     extract_tarfile(mattermost_bdist, destpath="/opt")
     # Create data + log + config dirs
     for folder in ("data", "logs", "config"):
-        os.makedirs(os.path.join("/opt/mattermost", folder),
+        os.makedirs("/opt/mattermost/{}".format(folder),
                     mode=0o700,
                     exist_ok=True)
-        shutil.chown(os.path.join("/opt/mattermost", folder),
-                     user="mattermost",
-                     group="mattermost")
     # Render systemd template
     render(source="mattermost.service.tmpl",
            target="/etc/systemd/system/mattermost.service",
@@ -211,6 +209,10 @@ def _install_mattermost():
         shutil.move(
             '{}/config/config.json'.format(backup_path),
             '/opt/mattermost/config/config.json')
+        shutil.move(
+            '{}/data'.format(backup_path),
+            '/opt/mattermost/data')
+    chownr("/opt/mattermost", "mattermost", "mattermost")
 
 
 def _update_config(site_name):

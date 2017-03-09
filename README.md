@@ -1,47 +1,77 @@
 # How to use
 
-## TLS Options
+## Basic unsecured mattermost instance
 
-Deployment requires agreement to ISRG terms of service, because Let's Encrypt is the primary and recommended method for setting up TLS.
+Deploy and connect Mattermost and PorsgreSQL for a basic Mattermost setup.
 
-### Secured with Let's Encrypt in public clouds
+```bash
+# Deploy mattermost and postgres
+juju deploy cs:~tengu-team/mattermost
+juju deploy cs:postgres
+# Connect the two
+juju add-realtion mattermost postgres:db
+# Make mattermost publicly available
+juju expose mattermost
+```
 
-Deploy to a public cloud and expose it.
+Check the deployment status (press <kbd>ctrl</kbd>-<kbd>c</kbd> to exit)
 
-    juju deploy cs:~tengu-team/mattermost
-    juju deploy postgresql
-    juju add-relation mattermost postgresql:db
-    juju expose mattermost
+    watch -c juju status --color
 
-Acquire a DNS name for the instance. Then set `fqdn` to the DNS name.
+```
+Unit                  Workload  Agent  Machine  Public address  Ports                     Message
+mattermost/2*         active    idle    0       172.28.0.50     80/tcp,443/tcp,8065/tcp   Ready (http://172.28.0.50:8065 [Insecure! Please set fqdn!])
+postgresql/2*         active    idle    1       172.28.0.31     5432/tcp                  Live master (9.5.6)
+```
+This is a basic insecure mattermost setup ideal for testing. All your traffic can be sniffed so **never use this in production**. Surf to the url from the message to get started. The first thing you'll need to do is to create an account. This account will be the admin user of mattermost. After installation, Mattermost runs in "Preview mode". Email and push notifications will be disabled. Add email settings in the admin console to get mattermost out of preview mode.
 
-    juju config mattermost fqdn=chat.tengu.io
+## Secure mattermost using a Let's Encrypt certificate
 
-Let's Encrypt will do the rest. When the workload state becomes active, your Mattermost instance is ready to set up.
+You need to have a DNS entry pointing to the mattermost unit to make it secure. The mattermost instance will request a Let's Encrypt https certificate to secure itself. Tell the mattermost instance its DNS name using the fqdn config option.
 
-If registration fails, check:
+```bash
+# Expose mattermost (this is needed for certificate request)
+juju expose mattermost
+# Tell mattermost what DNS name points to it.
+juju config mattermost fqdn=mattermost.example.com
+```
+
+This will give you a secure mattermost instance that is publicly available by surfing to `https://mattermost.example.com`. If registration fails, check:
 
 - That you've exposed mattermost. Let's Encrypt needs to connect to ports 80 and 443 as part of the registration process.
 - That the DNS name has had time to propagate and cached entries have expired.
 - That the DNS name is allowed by Let's Encrypt. Some names, like the dynamic ones given to EC2 instances, may not be allowed.
 
-### Reverse-proxied by a front-end
+## How to upgrade Mattermost
 
-With `fqdn` unset, relate mattermost to a reverse proxy.
+Upgrade mattermost by giving it the tarball of the new Mattermost release. You can find these tarballs here: https://about.mattermost.com/download/. Download the file to your laptop and send it to the Mattermost instance using `juju attach`.
 
-    juju deploy cs:~tengu-team/mattermost
-    juju deploy postgresql
-    juju deploy haproxy
-    juju add-relation postgresql:db mattermost:db
-    juju add-relation haproxy mattermost
+```bash
+juju attach charm-name bdist=/path/to/mattermost.tar.gz
+```
 
-## Alternative binary distributions
+The Mattermost config and userdata will not be overwritten during an upgrade. Previous mattermost versions will be saved on the Mattermost instance. You can revert to the previous version using `juju run-action mattermost/0 revert-mattermost`. Check the status of the revert using `juju show-action-output <uid>`.
 
-To deploy with your own Mattermost binary distribution:
+## How to rever
 
-    juju deploy cs:~tengu-team/mattermost --resource bdist=/path/to/mattermost.tar.gz
+## Advanced: Mattermost behind a reverse proxy
 
-Note that Mattermost releases prior to 2.1.0 have not been tested.
+Mattermost exposes the `http` interface that can be used to connect other Charms to mattermost. Other Charms will always connect using the insecure http interface since the reverse proxy will also be the https endpoint in a typical deployment.
+
+```bash
+# Deploy Mattermost, Postgres and the HAProxy reverse proxy.
+juju deploy cs:~tengu-team/mattermost
+juju deploy postgresql
+juju deploy haproxy
+# Connect Mattermost to Postgres
+juju add-relation postgresql:db mattermost:db
+# Connect Mattermost to the reverse proxy.
+juju add-relation haproxy mattermost
+# Add ssl config to haproxy
+# ...
+```
+
+
 
 # License
 

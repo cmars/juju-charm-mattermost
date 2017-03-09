@@ -1,0 +1,92 @@
+#!/usr/bin/python3
+# Copyright 2015 Canonical Ltd.
+#
+# This file is part of the PostgreSQL Charm for Juju.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranties of
+# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR
+# PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# pylint:disable=C0413
+
+import os
+import re
+import sys
+import shutil
+import traceback
+import datetime
+
+import dateutil.parser
+
+hooks_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                         '..', 'hooks'))
+if hooks_dir not in sys.path:
+    sys.path.append(hooks_dir)
+libs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                        '..', 'lib'))
+if libs_dir not in sys.path:
+    sys.path.append(libs_dir)
+
+
+from charmhelpers.core import hookenv
+from charmhelpers.core.host import chownr
+from charms import reactive
+
+
+def revert_mattermost():
+    # Backup existing installation if it exists
+    backception_to = "/opt/mattermost.backception{}".format(str(datetime.datetime.now()))
+    shutil.move('/opt/mattermost', backception_to)
+    revert_from = get_last_backup()
+    if not revert_from:
+        hookenv.action_fail('No Backup available')
+    shutil.move(revert_from, '/opt/mattermost')
+    chownr("/opt/mattermost", "mattermost", "mattermost")
+
+    hookenv.action_set(dict(result='Reverted back to {}'.format(revert_from)))
+
+
+def get_last_backup():
+    datetimes = [get_datetime_from_filename(dirname[0]) for dirname in os.walk('/opt')]
+    datetimes = (dirname for dirname in datetimes if dirname is not None)
+    if datetimes:
+        last_datetime = max(datetimes)
+        return "/opt/mattermost.back{}".format(str(last_datetime))
+    return None
+
+
+def get_datetime_from_filename(filename):
+    result = re.search(r'mattermost.back(.*)', filename)
+    if result:
+        try:
+            return dateutil.parser.parse(result.group(1))
+        except ValueError:
+            pass
+    return None
+
+
+def reactive_action(state):
+    reactive.set_state(state)
+    reactive.main()
+
+
+def main(argv):  # pylint:disable=W0613
+    # action = os.path.basename(argv[0])
+    # params = hookenv.action_get()
+    try:
+        revert_mattermost()
+    except Exception:  # pylint: disable=W0703
+        hookenv.action_fail('Unhandled exception')
+        hookenv.action_set(dict(traceback=traceback.format_exc()))
+
+
+if __name__ == '__main__':
+    main(sys.argv)
