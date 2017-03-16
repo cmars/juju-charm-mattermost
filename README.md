@@ -1,3 +1,14 @@
+# Description
+
+This Charm installs and Manages Mattermost, an Open source, private cloud Slack-alternative.
+
+ - Workplace messaging for web, PCs and phones.
+ - MIT-licensed. Hundreds of contributors. 11 languages.
+ - Secure, configurable, and scalable from teams to enterprise.
+
+ <img src="https://raw.githubusercontent.com/tengu-team/layer-mattermost/master/files/mattermost-screenshot.png" width="400">
+
+
 # How to use
 
 ## Basic unsecured mattermost instance
@@ -200,10 +211,10 @@ GRANT
 
 # License
 
-Copyright 2016 Casey Marshall.
-Copyright 2017 Ghent University.
+- Copyright 2016 Casey Marshall.
+- Copyright 2017 Ghent University.
 
-The [copyright](copyright) file contains the software license for this charm.
+The [copyright](copyright) file contains the software license for this charm (ALv2).
 
 Mattermost is a trademark of Mattermost, Inc.
 
@@ -211,9 +222,7 @@ Mattermost is a trademark of Mattermost, Inc.
 
 This charm automates installation, configuration and management of a Mattermost server based on publicly documented best practices. This charm is not a part of the Mattermost product, is not endorsed by, and does not represent Mattermost, Inc. in any way.
 
-See the [Mattermost](http://www.mattermost.org/) website for more information
-about the licenses and trademarks applicable to the software installed by this
-charm.
+See the [Mattermost](http://www.mattermost.org/) website for more information about the licenses and trademarks applicable to the software installed by this charm.
 
 # Contact Information
 
