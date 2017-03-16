@@ -1,6 +1,6 @@
 # Description
 
-This Charm installs and Manages Mattermost, an Open source, private cloud Slack-alternative.
+This Charm installs and manages Mattermost, an Open source, private cloud Slack-alternative.
 
  - Workplace messaging for web, PCs and phones.
  - MIT-licensed. Hundreds of contributors. 11 languages.
@@ -11,9 +11,9 @@ This Charm installs and Manages Mattermost, an Open source, private cloud Slack-
 
 # How to use
 
-## Basic unsecured mattermost instance
+## Basic insecure mattermost instance
 
-Deploy and connect Mattermost and PorsgreSQL for a basic Mattermost setup.
+Deploy and connect Mattermost and PorsgreSQL for a basic Mattermost testing setup.
 
 ```bash
 # Deploy mattermost and postgres
@@ -36,7 +36,7 @@ postgresql/2*         active    idle    1       172.28.0.31     5432/tcp        
 ```
 This is a basic insecure mattermost setup ideal for testing. All your traffic can be sniffed so **never use this in production**. Surf to the url from the message to get started. The first thing you'll need to do is to create an account. This account will be the admin user of mattermost. After installation, Mattermost runs in "Preview mode". Email and push notifications will be disabled. Add email settings in the admin console to get mattermost out of preview mode.
 
-## Secure mattermost using a Let's Encrypt certificate
+## Secure mattermost using Let's Encrypt
 
 You need to have a DNS entry pointing to the mattermost unit to make it secure. The mattermost instance will request a Let's Encrypt https certificate to secure itself. Tell the mattermost instance its DNS name using the fqdn config option.
 
@@ -53,7 +53,7 @@ This will give you a secure mattermost instance that is publicly available by su
 - That the DNS name has had time to propagate and cached entries have expired.
 - That the DNS name is allowed by Let's Encrypt. Some names, like the dynamic ones given to EC2 instances, may not be allowed.
 
-## How to upgrade Mattermost
+## Upgrade Mattermost
 
 Upgrade mattermost by giving it the tarball of the new Mattermost release. You can find these tarballs here: https://about.mattermost.com/download/. Download the file to your laptop and send it to the Mattermost instance using `juju attach`.
 
