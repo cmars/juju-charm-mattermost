@@ -83,7 +83,7 @@ To have a full back-up of mattermost instance, you need to back-up the following
  - `/opt/mattermost/data/`
  - A backup of the postgres database.
 
-<!-- sudo tar -zcvf mattermost-data-backup.tar.gz /opt/mattermost/data/ -->
+sudo tar -zcvf mattermost-data-backup.tar.gz /opt/mattermost/data/
 
 ```bash
 sudo cp -r /opt/mattermost/data/ .
