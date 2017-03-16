@@ -6,7 +6,7 @@ This Charm installs and Manages Mattermost, an Open source, private cloud Slack-
  - MIT-licensed. Hundreds of contributors. 11 languages.
  - Secure, configurable, and scalable from teams to enterprise.
 
- <img src="https://raw.githubusercontent.com/tengu-team/layer-mattermost/master/files/mattermost-screenshot.png" width="400">
+ <img src="https://raw.githubusercontent.com/tengu-team/layer-mattermost/master/files/mattermost-screenshot.png">
 
 
 # How to use
