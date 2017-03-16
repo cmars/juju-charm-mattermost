@@ -115,7 +115,9 @@ def setup_mattermost_backend(postgres_relation):
     #    no ssl certificate before `expose`.
     open_port(config().get('port'))
     open_port(443)
-    status_set('active', 'Ready (http://{}:8065 [Insecure! Please set fqdn!])'.format(unit_public_ip()))
+    status_set(
+        'active',
+        'Ready (http://{}:8065 [Insecure! Please set fqdn!])'.format(unit_public_ip()))
     set_state('mattermost.backend.started')
 
 

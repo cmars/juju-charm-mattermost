@@ -52,7 +52,9 @@ juju attach charm-name bdist=/path/to/mattermost.tar.gz
 
 The Mattermost config and userdata will not be overwritten during an upgrade. Previous mattermost versions will be saved on the Mattermost instance. You can revert to the previous version using `juju run-action mattermost/0 revert-mattermost`. Check the status of the revert using `juju show-action-output <uid>`.
 
-## How to rever
+## How to import Slack History
+
+Mattermost allows you to import your complete Slack history. You get your complete Slack history even if you are on a free plan. More information: https://docs.mattermost.com/administration/migrating.html#migrating-from-slack
 
 ## Advanced: Mattermost behind a reverse proxy
 
@@ -71,7 +73,130 @@ juju add-relation haproxy mattermost
 # ...
 ```
 
+<!--
 
+## How to create a backup
+
+To have a full back-up of mattermost instance, you need to back-up the following things.
+
+ - `/opt/mattermost/config/config.json`
+ - `/opt/mattermost/data/`
+ - A backup of the postgres database.
+
+<!-- sudo tar -zcvf mattermost-data-backup.tar.gz /opt/mattermost/data/ -->
+
+```bash
+sudo cp -r /opt/mattermost/data/ .
+sudo cp /opt/mattermost/config/config.json .
+# Now get the files with
+# juju scp mattermost/0:~/config.json .
+# juju scp -- -r mattermost/0:~/data/ .
+```
+
+
+I'll explain two ways to backup the postgres database: An SQL dump and a Write Ahaid Log for Point In Time Recovery.
+
+**SQL Dump**
+
+An SQL dump is the most portable dumping mechanism. Restoring an SQL dump to a Postgres instance with a higher version or a different processor architecture should work without any isues. An SQL dump is internally consistent. The dump represents a snapshot of the database at the time the dump starts. A dump doesn't block other operations on the database while dumping, but these operations won't be included in the dump.
+
+```bash
+juju ssh postgresql/0
+sudo su - postgres
+psql
+```
+
+You see the following output.
+
+```
+postgres@juju-c23533-0-lxd-0:~$ psql
+psql (9.5.6)
+Type "help" for help.
+
+postgres=#
+```
+
+```
+postgres=# \du
+                                      List of roles
+    Role name    |                         Attributes                         | Member of
+-----------------+------------------------------------------------------------+-----------
+ _juju_repl      | Replication                                                | {}
+ juju_mattermost |                                                            | {}
+ postgres        | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+postgres=# \dt
+No relations found.
+postgres=# \l
+                                 List of databases
+    Name    |  Owner   | Encoding | Collate | Ctype |      Access privileges       
+------------+----------+----------+---------+-------+------------------------------
+ mattermost | postgres | UTF8     | C       | C     | =Tc/postgres                +
+            |          |          |         |       | postgres=CTc/postgres       +
+            |          |          |         |       | juju_mattermost=CTc/postgres
+ postgres   | postgres | UTF8     | C       | C     |
+ template0  | postgres | UTF8     | C       | C     | =c/postgres                 +
+            |          |          |         |       | postgres=CTc/postgres
+ template1  | postgres | UTF8     | C       | C     | =c/postgres                 +
+            |          |          |         |       | postgres=CTc/postgres
+(4 rows)
+```
+
+Exit the psql client by typing `\q` and dump the database.
+
+```bash
+sudo su - postgres
+DUMP=mattermost-dump-$(date +%Y-%m-%d:%H:%M:%S).sql
+echo "$DUMP"
+pg_dump --clean mattermost > "/var/lib/postgresql/backups/$DUMP"
+ln -sf "$DUMP" /var/lib/postgresql/backups/mattermost-dump-latest.sql
+exit
+# As Ubuntu
+sudo cp "/var/lib/postgresql/backups/mattermost-dump-latest.sql" /home/ubuntu/mattermost-dump-latest.sql
+sudo chown ubuntu:ubuntu /home/ubuntu/mattermost-dump-latest.sql
+# now you can download this dump from your laptop with
+# juju scp postgresql/0:~/mattermost-dump-latest.sql .
+```
+
+## How to restore a backup
+
+```bash
+juju scp -- -r data matter2/0:~/
+juju scp -- -r config.json matter2/0:~/
+juju scp -- -r mattermost-dump-latest.sql postgres2/0:~/
+#
+juju ssh matter2/0
+sudo systemctl stop mattermost
+sudo cp config.json /opt/mattermost/config/config.json
+sudo cp -r data/ /opt/mattermost/
+sudo chown -R mattermost:mattermost /opt/mattermost/data/ /opt/mattermost/config/config.json
+exit
+#
+juju ssh postgres2/0
+sudo cp mattermost-dump-latest.sql /var/lib/postgresql/
+sudo su - postgres
+psql matter2 < mattermost-dump-latest.sql
+```
+```
+SET
+ERROR:  relation "audits" already exists
+ERROR:  role "juju_mattermost" does not exist
+ERROR:  relation "channelmembers" already exists
+ERROR:  role "juju_mattermost" does not exist
+...
+ERROR:  relation "idx_users_names_no_full_name_txt" already exists
+ERROR:  relation "idx_users_names_txt" already exists
+ERROR:  relation "idx_users_update_at" already exists
+REVOKE
+REVOKE
+GRANT
+GRANT
+
+```
+
+[Source](https://www.postgresql.org/docs/9.1/static/backup-dump.html)
+
+-->
 
 # License
 
