@@ -9,3 +9,6 @@ WorkingDirectory=/opt/mattermost
 ExecStart=/opt/mattermost/bin/platform
 Restart=always
 RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
