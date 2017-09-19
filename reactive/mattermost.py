@@ -213,7 +213,7 @@ def _install_mattermost():
             '/opt/mattermost/config/config.json')
         shutil.move(
             '{}/data'.format(backup_path),
-            '/opt/mattermost/data')
+            '/opt/mattermost/')
     chownr("/opt/mattermost", "mattermost", "mattermost")
 
 
