@@ -2,38 +2,36 @@
 
 This Charm installs and manages Mattermost, an Open source, private cloud Slack-alternative.
 
- - Workplace messaging for web, PCs and phones.
- - MIT-licensed. Hundreds of contributors. 11 languages.
- - Secure, configurable, and scalable from teams to enterprise.
+* Workplace messaging for web, PCs and phones.
+* MIT-licensed. Hundreds of contributors. 11 languages.
+* Secure, configurable, and scalable from teams to enterprise.
 
- <img src="https://raw.githubusercontent.com/tengu-team/layer-mattermost/master/files/mattermost-screenshot.png">
-
+![Mattermost screenshot](https://raw.githubusercontent.com/tengu-team/layer-mattermost/master/files/mattermost-screenshot.png)
 
 # How to use
 
 ## Basic insecure mattermost instance
 
-Deploy and connect Mattermost and PorsgreSQL for a basic Mattermost testing setup.
+Deploy and connect Mattermost and PostgreSQL for a basic Mattermost testing setup.
 
 ```bash
 # Deploy mattermost and postgres
 juju deploy cs:~tengu-team/mattermost
-juju deploy cs:postgres
+juju deploy postgresql
 # Connect the two
-juju add-realtion mattermost postgres:db
+juju add-relation mattermost postgresql:db
 # Make mattermost publicly available
 juju expose mattermost
 ```
 
-Check the deployment status (press <kbd>ctrl</kbd>-<kbd>c</kbd> to exit)
+Check the deployment status with `watch -c juju status --color` (press <kbd>ctrl</kbd>-<kbd>c</kbd> to exit).
 
-    watch -c juju status --color
-
-```
+```text
 Unit                  Workload  Agent  Machine  Public address  Ports                     Message
 mattermost/2*         active    idle    0       172.28.0.50     80/tcp,443/tcp,8065/tcp   Ready (http://172.28.0.50:8065 [Insecure! Please set fqdn!])
 postgresql/2*         active    idle    1       172.28.0.31     5432/tcp                  Live master (9.5.6)
 ```
+
 This is a basic insecure mattermost setup ideal for testing. All your traffic can be sniffed so **never use this in production**. Surf to the url from the message to get started. The first thing you'll need to do is to create an account. This account will be the admin user of mattermost. After installation, Mattermost runs in "Preview mode". Email and push notifications will be disabled. Add email settings in the admin console to get mattermost out of preview mode.
 
 ## Secure mattermost using Let's Encrypt
@@ -49,9 +47,9 @@ juju config mattermost fqdn=mattermost.example.com
 
 This will give you a secure mattermost instance that is publicly available by surfing to `https://mattermost.example.com`. If registration fails, check:
 
-- That you've exposed mattermost. Let's Encrypt needs to connect to ports 80 and 443 as part of the registration process.
-- That the DNS name has had time to propagate and cached entries have expired.
-- That the DNS name is allowed by Let's Encrypt. Some names, like the dynamic ones given to EC2 instances, may not be allowed.
+* That you've exposed mattermost. Let's Encrypt needs to connect to ports 80 and 443 as part of the registration process.
+* That the DNS name has had time to propagate and cached entries have expired.
+* That the DNS name is allowed by Let's Encrypt. Some names, like the dynamic ones given to EC2 instances, may not be allowed.
 
 ## Upgrade Mattermost
 
@@ -140,7 +138,7 @@ postgres=# \dt
 No relations found.
 postgres=# \l
                                  List of databases
-    Name    |  Owner   | Encoding | Collate | Ctype |      Access privileges       
+    Name    |  Owner   | Encoding | Collate | Ctype |      Access privileges
 ------------+----------+----------+---------+-------+------------------------------
  mattermost | postgres | UTF8     | C       | C     | =Tc/postgres                +
             |          |          |         |       | postgres=CTc/postgres       +
@@ -211,8 +209,8 @@ GRANT
 
 # License
 
-- Copyright 2016 Casey Marshall.
-- Copyright 2017 Ghent University.
+* Copyright 2016 Casey Marshall.
+* Copyright 2018 Ghent University.
 
 The [copyright](copyright) file contains the software license for this charm (ALv2).
 
@@ -228,4 +226,4 @@ See the [Mattermost](http://www.mattermost.org/) website for more information ab
 
 This software was created in the [IDLab research group](https://www.ugent.be/ea/idlab) of [Ghent University](https://www.ugent.be) in Belgium. This software is used in [Tengu](https://tengu.io), a project that aims to make experimenting with data frameworks and tools as easy as possible.
 
- - Merlijn Sebrechts <merlijn.sebrechts@gmail.com>
+* Merlijn Sebrechts <merlijn.sebrechts@gmail.com>

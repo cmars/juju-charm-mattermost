@@ -19,7 +19,7 @@ import json
 import os
 import re
 import shutil
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output, CalledProcessError, STDOUT
 import datetime
 
 from charmhelpers.core.hookenv import (
@@ -103,9 +103,16 @@ def setup_mattermost_backend(postgres_relation):
     _configure_mattermost_postgres(postgres_relation.master.uri)
     service_restart('mattermost')
     # Set build number for Juju status
-    output = check_output(['/opt/mattermost/bin/platform', 'version'],
-                          cwd='/opt/mattermost/bin/',
-                          universal_newlines=True)
+    try:
+        output = check_output(
+            ['/opt/mattermost/bin/platform', 'version'],
+            cwd='/opt/mattermost/bin/',
+            universal_newlines=True,
+            stderr=STDOUT,
+        )
+    except CalledProcessError as e:
+        print(e.output)
+        raise
     build_number = re.search(r'Build Number: ([0-9]+.[0-9]+.[0-9])+\n', output).group(1)
     application_version_set(build_number)
     open_port(8065)
@@ -195,11 +202,7 @@ def _install_mattermost():
     # Get and uppack resource
     mattermost_bdist = resource_get('bdist')
     extract_tarfile(mattermost_bdist, destpath="/opt")
-    # Create data + log + config dirs
-    for folder in ("data", "logs", "config"):
-        os.makedirs("/opt/mattermost/{}".format(folder),
-                    mode=0o700,
-                    exist_ok=True)
+
     # Render systemd template
     render(source="mattermost.service.tmpl",
            target="/etc/systemd/system/mattermost.service",
@@ -214,7 +217,12 @@ def _install_mattermost():
         shutil.move(
             '{}/data'.format(backup_path),
             '/opt/mattermost/')
-    chownr("/opt/mattermost", "mattermost", "mattermost")
+    # Create dirs that don't exist yet
+    for folder in ("data", "logs", "config"):
+        os.makedirs("/opt/mattermost/{}".format(folder),
+                    mode=0o700,
+                    exist_ok=True)
+    chownr("/opt/mattermost", "mattermost", "mattermost", chowntopdir=True)
 
 
 def _update_config(site_name):
