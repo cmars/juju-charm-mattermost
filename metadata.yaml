@@ -1,24 +1,17 @@
 name: mattermost
 summary: Mattermost is an open source, self-hosted Slack-alternative.
 description: |
-    From the [Mattermost](http://www.mattermost.org) website:
-    
-    As an alternative to proprietary SaaS messaging, Mattermost brings all your
-    team communication into one place, making it searchable and accessible
-    anywhere.
-    
-    Mattermost is:
-    
-    * Slack-compatible, not Slack-limited – Mattermost features rival Slack features, and support a superset of Slack’s incoming and outgoing webhook integrations, including compatibility with existing Slack integrations. From your existing Slack teams, you can import users, public channel history and even theme setting colors into Mattermost. Mattermost mobile experience with comment threads and file sharing
-    * Accessible on web, desktop, phone and tablet – Use Mattermost from your iOS or Android phones and tablets or with installed apps on Windows, Linux and Mac. Easy to deploy, manage, upgrade and extend– Mattermost is written in Golang and React and runs as a single Linux binary with either MySQL or Postgres. Every month on the 16th a new compiled version is released under an MIT license.
-    * Supported by a vibrant community – Use Mattermost with dozens of community integrations and applications, including Jira, IRC, XMPP, Hubot, Giphy, Jenkins, GitLab, Trac, Redmine, SVN, RSS/Atom and many others. Build and share your own apps using Mattermost APIs and drivers.
+    Open source, private cloud Slack-alternative.
+
+    Workplace messaging for web, PCs and phones. MIT-licensed. Hundreds of contributors. 11 languages. Secure, configurable, and scalable from teams to enterprise.
+
 tags:
     - applications
     - messaging
     - groupware
-maintainer: Casey Marshall <charmed@cmars.tech>
+maintainer: Merlijn Sebrechts <merlijn.sebrechts@gmail.com>
 requires:
-    db:
+    postgres:
         interface: pgsql
 provides:
     website:
@@ -28,3 +21,4 @@ resources:
         type: file
         filename: mattermost.tar.gz
         description: Binary distribution of Mattermost, obtained from https://www.mattermost.org/download/
+series: ['xenial']
