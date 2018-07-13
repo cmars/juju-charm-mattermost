@@ -1,0 +1,18 @@
+schema: canonical/juju
+schema-definition:
+  levels:
+  - metric
+  - model
+  - team
+  - user
+metrics:
+  channels:
+    aggregations:
+      team:
+        transform: max
+    price: 0.01
+  posts:
+    aggregations:
+      user:
+        transform: max
+    price: 0.01

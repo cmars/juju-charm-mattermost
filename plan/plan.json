@@ -1,0 +1,1 @@
+{"plan":"schema: canonical/juju\nschema-definition:\n  levels:\n  - metric\n  - model\n  - team\n  - user\nmetrics:\n  channels:\n    aggregations:\n      team:\n        transform: max\n    price: 0.01\n  posts:\n    aggregations:\n      user:\n        transform: max\n    price: 0.01\n","url":"cmars/mattermost-labeled-plan"}
