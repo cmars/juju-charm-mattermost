@@ -21,4 +21,4 @@ resources:
         type: file
         filename: mattermost.tar.gz
         description: Binary distribution of Mattermost, obtained from https://www.mattermost.org/download/
-series: ['xenial']
+series: ['xenial', 'bionic', 'focal']
